@@ -1,5 +1,0 @@
-package com.sunbeam.dao;
-
-public interface UserDao {
-
-}
