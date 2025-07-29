@@ -54,3 +54,4 @@ spring.log
 # Build output
 build/
 
+/.metadata/
