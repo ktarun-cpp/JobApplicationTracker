@@ -1,0 +1,8 @@
+package com.sunbeam.customs_exception;
+
+public class ApiException extends RuntimeException {
+public ApiException(String msg) {
+	// TODO Auto-generated constructor stub
+super(msg);
+}
+}

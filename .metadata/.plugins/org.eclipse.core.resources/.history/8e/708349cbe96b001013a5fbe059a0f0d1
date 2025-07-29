@@ -1,0 +1,10 @@
+package com.sunbeam.service;
+
+import com.sunbeam.dto.ApiResponse;
+import com.sunbeam.dto.UserDTO;
+
+public interface UserService {
+
+	ApiResponse registerUser(UserDTO dto);
+
+}

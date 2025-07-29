@@ -1,0 +1,18 @@
+package com.sunbeam.dto;
+
+import java.time.LocalDateTime;
+
+public class ApiResponse {
+ private LocalDateTime date;
+ private String msg;
+ private Boolean status;
+ private Object obj;
+ public ApiResponse(String msg) {
+	 this.msg=msg;
+	 this.date=LocalDateTime.now();
+ }
+ public ApiResponse(Boolean status,String msg,Object obj) {
+	// TODO Auto-generated constructor stub
+}
+ 
+}

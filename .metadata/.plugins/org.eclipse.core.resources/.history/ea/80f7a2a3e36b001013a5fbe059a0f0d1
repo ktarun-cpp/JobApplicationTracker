@@ -1,0 +1,17 @@
+package com.sunbeam.service;
+
+import java.net.URI;
+
+import com.sunbeam.dto.ApiResponse;
+import com.sunbeam.dto.CourseDTO;
+import com.sunbeam.dto.CourseDTOupdate;
+
+public interface CourseService {
+
+	CourseDTO addCourse(CourseDTO dto);
+
+	ApiResponse deleteCourse(Long id);
+
+	ApiResponse courseUpdate(CourseDTOupdate dto, Long id);
+
+}

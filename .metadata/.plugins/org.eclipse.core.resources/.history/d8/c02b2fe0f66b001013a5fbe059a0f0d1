@@ -1,0 +1,92 @@
+package com.sunbeam.serviceImpl;
+
+import java.util.Optional;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
+
+import com.sunbeam.customs_exception.ResourceNotFoundException;
+import com.sunbeam.dao.UserDao;
+import com.sunbeam.dto.ApiResponse;
+import com.sunbeam.dto.UserDTO;
+import com.sunbeam.dto.UserLoginDTO;
+import com.sunbeam.dto.UserResponseDTO;
+import com.sunbeam.dto.updatePasswordDTO;
+import com.sunbeam.entities.User;
+import com.sunbeam.service.UserService;
+
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+
+@Service
+@Transactional
+@AllArgsConstructor
+public class UserServiceImpl implements UserService{
+	private final UserDao userDao;
+	private final ModelMapper map;
+	
+
+	@Override
+	public ApiResponse registerUser(UserDTO dto) {
+		boolean status =userDao.existsByEmail(dto.getEmail());
+		if(status==true) {
+			return new ApiResponse(false,"User Already exist, Login Please");
+		}
+		else {
+		User entity = map.map(dto, User.class);
+		userDao.save(entity);
+		return new ApiResponse(true,"User registered successfully");
+		}
+	}
+
+
+	@Override
+	public ApiResponse loginUser(UserLoginDTO dto) {
+		Optional<User> optionalentity = userDao.findByEmail(dto.getEmail());
+		if(optionalentity.isEmpty()) {
+			return new ApiResponse(false,"User Not Found, Register First");
+		}
+		User entity = optionalentity.get();
+		if(!entity.getPassword().equals(dto.getPassword())) {
+			return new ApiResponse(false, "Invalid Password, Try Again");
+		}
+		UserResponseDTO user = new UserResponseDTO(
+				entity.getId(),
+				entity.getFirstName(),
+				entity.getLastName(),
+				entity.getEmail(),
+				entity.getPhoneNo()
+				);
+				
+		return new ApiResponse("User Logged in successfully", true, user);
+	}
+
+
+	@Override
+	public UserDTO getProfile(Long id) {
+		User entity =userDao.findById(id)
+				.orElseThrow(()->new ResourceNotFoundException("User not found id : "+ id));
+		return map.map(entity, UserDTO.class);
+	}
+
+
+	@Override
+	public ApiResponse updatePassword(Long id, updatePasswordDTO dto) {
+		User entity = userDao.findById(id)
+				.orElseThrow(()-> new ResourceNotFoundException("User Not Found"));
+		if(!entity.getPassword().equals(dto.getOldPassword())) {
+			return new ApiResponse(false, "Enter correct old Password");
+		}
+		else {
+			if(entity.getPassword().equals(dto.getNewPassword())) {
+				return new ApiResponse(false, "New and Old Password can't be same")
+			}
+			else {
+				entity.setPassword(dto.getNewPassword());
+				return new ApiResponse(true, "Password Changed Successfully");
+			}
+		}
+		return null;
+	}
+
+}

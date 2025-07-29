@@ -1,0 +1,23 @@
+package com.sunbeam.entities;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+public class Student extends BaseEntity{
+	
+	private String email;
+	private String password;
+	private int GPA;
+	@JoinColumn(name = "course_id")
+	@ManyToOne
+	private Course myCourse;
+}

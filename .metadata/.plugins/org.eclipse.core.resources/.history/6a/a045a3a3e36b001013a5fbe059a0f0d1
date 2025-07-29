@@ -1,0 +1,61 @@
+package com.sunbeam.service;
+
+import java.util.Optional;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sunbeam.customs_exception.ApiException;
+import com.sunbeam.customs_exception.ResourceNotFoundException;
+import com.sunbeam.dao.CourseDao;
+import com.sunbeam.dto.ApiResponse;
+import com.sunbeam.dto.CourseDTO;
+import com.sunbeam.dto.CourseDTOupdate;
+import com.sunbeam.entities.Course;
+
+import lombok.AllArgsConstructor;
+
+@Service
+@Transactional
+@AllArgsConstructor
+public class CourseServiceImpl implements CourseService{
+private final CourseDao courseDao;
+private ModelMapper map;
+	
+	
+	@Override
+	public CourseDTO addCourse(CourseDTO dto) {
+		Course entity;
+		Course course = courseDao.findByName(dto.getName());
+		if(course!=null) {
+			throw new ApiException("Course Already Exists");
+		}
+		else {
+			 entity = map.map(dto, Course.class);
+			courseDao.save(entity);
+		}
+		
+		return map.map(entity, CourseDTO.class);
+	}
+
+
+	@Override
+	public ApiResponse deleteCourse(Long id) {
+		courseDao.deleteById(id);
+		return new ApiResponse("deleted");
+	}
+
+
+	@Override
+	public ApiResponse courseUpdate(CourseDTOupdate dto, Long id) {
+		Course course = courseDao.findById(id)
+				.orElseThrow(()->new ResourceNotFoundException("course not found"));
+		course.setStartDate(dto.getStartDate());
+		course.setEndDate(dto.getEndDate());
+		course.setFees(dto.getFees());
+		courseDao.save(course);
+		return new ApiResponse("done");
+	}
+
+}

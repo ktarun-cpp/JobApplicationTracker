@@ -1,0 +1,7 @@
+package com.sunbeam.serviceImpl;
+
+import com.sunbeam.service.UserService;
+
+public class UserServiceImpl implements UserService{
+
+}

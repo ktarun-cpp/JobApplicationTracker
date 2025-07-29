@@ -1,0 +1,69 @@
+package com.sunbeam.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sunbeam.customs_exception.ResourceNotFoundException;
+import com.sunbeam.dao.CourseDao;
+import com.sunbeam.dao.StudentDao;
+import com.sunbeam.dto.ApiResponse;
+import com.sunbeam.dto.StudentDTO;
+import com.sunbeam.entities.Course;
+import com.sunbeam.entities.Student;
+
+import lombok.AllArgsConstructor;
+@Service
+@Transactional
+@AllArgsConstructor
+public class StudentServiceImpl implements StudentService {
+//depcy
+	//ctor di
+	private final StudentDao studentDao;
+	private ModelMapper map;
+	private final CourseDao courseDao;
+	
+	
+	//add a student
+	@Override
+	public StudentDTO addStudent(StudentDTO dto, Long id) {
+		Student entity ;
+		Course course= courseDao.findById(id)
+		.orElseThrow(()-> new ResourceNotFoundException("invalid course id !!!"));
+		//helper method
+		 entity = map.map(dto, Student.class);
+		course.addStudent(entity);
+		
+		return map.map(entity, StudentDTO.class);
+	}
+
+
+	@Override
+	public List<StudentDTO> listStudent(String name) {
+		Course course=courseDao.findByName(name);
+		if(course==null) {
+			throw new ResourceNotFoundException("Course not found.....");
+		}
+		List<Student> list=course.getStudent();
+		List<StudentDTO> dto= list.stream()
+		.map(Student->map.map(Student, StudentDTO.class))
+		.toList();
+		return dto;
+	}
+
+
+	@Override
+	public ApiResponse deleteStudent(Long id) {
+		Student st =studentDao.findById(id)
+		.orElseThrow(()->new ResourceNotFoundException("student does not exist"));
+		Course c= st.getMyCourse();
+		c.getStudent().remove(st);
+		
+		return new ApiResponse("done");
+	}
+
+}

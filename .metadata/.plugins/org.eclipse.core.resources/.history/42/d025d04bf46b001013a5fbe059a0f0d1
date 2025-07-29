@@ -1,0 +1,5 @@
+package com.sunbeam.globalExceptionHandler;
+
+public class GlobalExceptionHandler {
+
+}
