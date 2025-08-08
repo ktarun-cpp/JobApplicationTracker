@@ -45,7 +45,7 @@ public class User implements UserDetails {
 	
 	//this is one to many relationship 
 	//one user can have multiple applications
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
 	private List<Application> application = new ArrayList<>();
 	
 	
@@ -54,7 +54,10 @@ public class User implements UserDetails {
 		this.application.add(entity);
 		entity.setUser(this);
 	}
-
+	//helper method to delete application
+	public void deleteApp(Long id) {
+		this.application.removeIf(app->app.getId().equals(id));
+	}
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
