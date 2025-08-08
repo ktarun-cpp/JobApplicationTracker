@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sunbeam.config.JwtUtil;
 import com.sunbeam.dto.ApplicationDTO;
 import com.sunbeam.service.ApplicationService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -19,17 +21,21 @@ import lombok.AllArgsConstructor;
 @RequestMapping("/application")
 public class ApplicationController {
 	private final ApplicationService appService;
-	
+	private final JwtUtil jwtUtil;
 	// create a new job application
-	@PostMapping("/create/{id}")
-	public ResponseEntity<?> createApplication(@PathVariable Long id,@RequestBody ApplicationDTO dto){
+	@PostMapping("/create")
+	public ResponseEntity<?> createApplication(HttpServletRequest request,@RequestBody ApplicationDTO dto){
+		String token = jwtUtil.extractTokenFromRequest(request);
+		Long id =jwtUtil.extractId(token);
 		return ResponseEntity.status(HttpStatus.ACCEPTED).body(appService.createApplication(id,dto));
 	}
 	
 	//get all application
-	@GetMapping("/allapplication/{userId}")
-	public ResponseEntity<?> getAllApplication(@PathVariable Long userId){
-		return ResponseEntity.ok(appService.getAllApplication(userId));
+	@GetMapping("/all")
+	public ResponseEntity<?> getAllApplication(HttpServletRequest request){
+		String token = jwtUtil.extractTokenFromRequest(request);
+		Long id =jwtUtil.extractId(token);
+		return ResponseEntity.ok(appService.getAllApplication(id));
 	}
 	//update application
 	//delete application

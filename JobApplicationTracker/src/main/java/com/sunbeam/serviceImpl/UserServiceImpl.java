@@ -1,8 +1,12 @@
 package com.sunbeam.serviceImpl;
 
-import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.sunbeam.customs_exception.ResourceNotFoundException;
@@ -17,15 +21,19 @@ import com.sunbeam.entities.User;
 import com.sunbeam.service.UserService;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+
 
 @Service
 @Transactional
-@AllArgsConstructor
-public class UserServiceImpl implements UserService{
-	private final UserDao userDao;
-	private final ModelMapper map;
-	
+public class UserServiceImpl implements UserService,UserDetailsService{
+	private UserDao userDao;
+	private ModelMapper map;
+	private PasswordEncoder passwordEncoder;
+	public UserServiceImpl(UserDao userDao,ModelMapper map,@Lazy PasswordEncoder passwordEncoder) {
+		this.map=map;
+		this.passwordEncoder=passwordEncoder;
+		this.userDao=userDao;
+	}
 
 	@Override
 	public ApiResponse registerUser(UserDTO dto) {
@@ -35,6 +43,7 @@ public class UserServiceImpl implements UserService{
 		}
 		else {
 		User entity = map.map(dto, User.class);
+		entity.setPassword(passwordEncoder.encode(dto.getPassword()));
 		userDao.save(entity);
 		return new ApiResponse(true,"User registered successfully");
 		}
@@ -43,11 +52,11 @@ public class UserServiceImpl implements UserService{
 
 	@Override
 	public ApiResponse loginUser(UserLoginDTO dto) {
-		Optional<User> optionalentity = userDao.findByEmail(dto.getEmail());
-		if(optionalentity.isEmpty()) {
+	User entity = userDao.findByEmail(dto.getEmail());
+		if(entity==null) {
 			return new ApiResponse(false,"User Not Found, Register First");
 		}
-		User entity = optionalentity.get();
+		
 		if(!entity.getPassword().equals(dto.getPassword())) {
 			return new ApiResponse(false, "Invalid Password, Try Again");
 		}
@@ -75,17 +84,17 @@ public class UserServiceImpl implements UserService{
 	public ApiResponse updatePassword(Long id, updatePasswordDTO dto) {
 		User entity = userDao.findById(id)
 				.orElseThrow(()-> new ResourceNotFoundException("User Not Found"));
-		if(!entity.getPassword().equals(dto.getOldPassword())) {
-			return new ApiResponse(false, "Enter correct old Password");
-		}
-		
-			if(entity.getPassword().equals(dto.getNewPassword())) {
+		if(passwordEncoder.matches(dto.getOldPassword(), entity.getPassword())) {
+			if(passwordEncoder.matches(dto.getNewPassword(), entity.getPassword())) {
 				return new ApiResponse(false, "New and Old Password can't be same");
 			}
 			
-				entity.setPassword(dto.getNewPassword());
+				entity.setPassword(passwordEncoder.encode(dto.getNewPassword()));
 				userDao.save(entity);
 				return new ApiResponse(true, "Password Changed Successfully");
+		}
+		else
+			return new ApiResponse(false, "Enter correct old Password");
 			
 		}
 
@@ -100,6 +109,15 @@ public class UserServiceImpl implements UserService{
 		entity.setEmail(dto.getEmail());
 		userDao.save(entity);
 		return new ApiResponse(true, "User Updated");
+	}
+
+
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		User user = userDao.findByEmail(username);
+		if(user==null)
+			throw new UsernameNotFoundException("User not found : "+username);
+		return user;
 	}
 	}
 
